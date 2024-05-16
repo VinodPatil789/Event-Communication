@@ -60,11 +60,15 @@ node {
 
       stage('mdapi deploy') {
 
-        rmsg = bat returnStdout: true, script: "sfdx force:mdapi:deploy -d ${WORKSPACE}/manifest --verbose --json -u ${SCRATCH_ORG_USERNAME} -w -1 -l NoTestRun"
-
+        rmsg = bat(returnStdout: true, script: "sfdx force:mdapi:deploy -d ${WORKSPACE}/manifest --verbose --json -u ${SCRATCH_ORG_USERNAME} -w -1 -l NoTestRun").trim()
+        rmsg = rmsg.readLines().drop(1).join(" ")
+        
         println rmsg
 
-        robj = readJSON text: rmsg
+      //  robj = readJSON text: rmsg   //this syntax not working (error readJSON method not valid) lets check later.
+        def jsonSlurper = new JsonSlurperClassic();
+        def robj = jsonSlurper.parseText(rmsg)
+        println robj
         if (robj.status != 0) {
           error 'mdapi deploy: ' + robj
         }
